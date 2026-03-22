@@ -20,6 +20,9 @@
     "sql.js": "^1.14.1",
     "zustand": "^5.0.12"
   },
+  "overrides": {
+    "serialize-javascript": ">=7.0.3"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@types/canvas-confetti": "^1.9.0",

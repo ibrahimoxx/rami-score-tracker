@@ -12,6 +12,23 @@ dist
 dist-ssr
 *.local
 
+# Sensitive / secrets — NEVER commit these
+.env
+.env.*
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
+*.cert
+*.crt
+secrets.*
+config/credentials.*
+service-account*.json
+*secret*
+*credential*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
