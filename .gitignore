@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Claude AI config — never commit
+.claude/
+
 # Sensitive / secrets — NEVER commit these
 .env
 .env.*
