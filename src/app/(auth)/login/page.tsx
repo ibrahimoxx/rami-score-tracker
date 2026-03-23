@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react'
+import { ArrowRight, Mail, Lock, User, Eye, EyeOff, CheckCircle2, Circle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import FloatingCardBackground from '@/components/FloatingCardBackground'
@@ -22,6 +22,14 @@ export default function LoginPage() {
   const [magicSent, setMagicSent] = useState(false)
   const [forgotMode, setForgotMode] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+  const [registrationSent, setRegistrationSent] = useState(false)
+
+  const PWD_RULES = [
+    { test: (p: string) => p.length >= 8,      label: '8 caractères minimum' },
+    { test: (p: string) => /[A-Z]/.test(p),    label: 'Au moins une majuscule' },
+    { test: (p: string) => /[0-9]/.test(p),    label: 'Au moins un chiffre' },
+  ]
+  const pwdStrong = PWD_RULES.every(r => r.test(password))
 
   const clearError = () => setError('')
 
@@ -44,12 +52,26 @@ export default function LoginPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) { setError(toFrench(error.message)); setLoading(false); return }
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: name } },
       })
       if (error) { setError(toFrench(error.message)); setLoading(false); return }
+
+      // Supabase quirk: duplicate email with confirmation enabled → empty identities, no error
+      if (data.user?.identities?.length === 0) {
+        setError('Un compte existe déjà avec cette adresse email.')
+        setLoading(false)
+        return
+      }
+
+      // Email confirmation required — no session yet
+      if (!data.session) {
+        setLoading(false)
+        setRegistrationSent(true)
+        return
+      }
     }
     router.push('/dashboard')
     router.refresh()
@@ -93,7 +115,7 @@ export default function LoginPage() {
 
   if (forgotMode) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-x-hidden" style={{ background: 'var(--bg-primary)' }}>
         <FloatingCardBackground />
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
@@ -178,7 +200,7 @@ export default function LoginPage() {
 
   if (magicSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-x-hidden" style={{ background: 'var(--bg-primary)' }}>
         <FloatingCardBackground />
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -196,8 +218,37 @@ export default function LoginPage() {
     )
   }
 
+  if (registrationSent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-x-hidden" style={{ background: 'var(--bg-primary)' }}>
+        <FloatingCardBackground />
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="glass-card p-8 max-w-sm w-full text-center relative z-10"
+        >
+          <div className="text-5xl mb-4">✉️</div>
+          <h2 className="font-display text-xl text-ivory font-bold mb-2">Confirmez votre email</h2>
+          <p className="text-ivory/50 text-sm mb-1">
+            Un lien de confirmation a été envoyé à
+          </p>
+          <p className="text-gold/80 text-sm font-semibold mb-6">{email}</p>
+          <p className="text-ivory/30 text-xs mb-6">
+            Cliquez sur le lien dans l&apos;email pour activer votre compte, puis revenez vous connecter.
+          </p>
+          <button
+            onClick={() => { setRegistrationSent(false); setTab('login') }}
+            className="btn-gold w-full py-3 text-sm font-bold"
+          >
+            Aller à la connexion →
+          </button>
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between p-6 pt-0 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen flex flex-col items-center justify-between p-6 pt-0 relative overflow-x-hidden" style={{ background: 'var(--bg-primary)' }}>
       <FloatingCardBackground />
 
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm relative z-10">
@@ -345,6 +396,31 @@ export default function LoginPage() {
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+
+                  {/* Password strength (register only) */}
+                  <AnimatePresence>
+                    {tab === 'register' && password.length > 0 && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="mt-2.5 space-y-1.5 px-1"
+                      >
+                        {PWD_RULES.map(({ test, label }) => {
+                          const ok = test(password)
+                          return (
+                            <div key={label} className="flex items-center gap-2 text-xs">
+                              {ok
+                                ? <CheckCircle2 size={12} className="text-green-400 flex-shrink-0" />
+                                : <Circle size={12} className="text-ivory/20 flex-shrink-0" />
+                              }
+                              <span className={ok ? 'text-green-400' : 'text-ivory/30'}>{label}</span>
+                            </div>
+                          )
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -353,8 +429,8 @@ export default function LoginPage() {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={tab === 'login' && authMethod === 'magic' ? handleMagicLink : handlePasswordAuth}
-              disabled={loading}
-              className="btn-gold w-full py-3.5 text-base font-bold flex items-center justify-center gap-2 mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
+              disabled={loading || (tab === 'register' && !pwdStrong)}
+              className="btn-gold w-full py-3.5 text-base font-bold flex items-center justify-center gap-2 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
@@ -408,17 +484,15 @@ export default function LoginPage() {
       {/* Footer attribution */}
       <div className="relative z-10 text-center pb-2">
         <p className="text-ivory/30 text-xs tracking-wide">
-          Conçu &amp; développé par{' '}
-          <a
-            href="https://www.ibrahimstouri.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gold/70 hover:text-gold transition-colors font-semibold underline decoration-gold/30 underline-offset-2"
-          >
-            Ibrahim Stouri
-          </a>
+          Conçu &amp; développé par
         </p>
-        <p className="text-ivory/20 text-[11px] mt-1 tracking-widest uppercase">
+        <button
+          onClick={() => window.open('https://www.ibrahimstouri.com/', '_blank', 'noopener,noreferrer')}
+          className="text-gold/80 hover:text-gold active:text-gold transition-colors font-semibold text-sm mt-0.5 underline decoration-gold/40 underline-offset-2 px-2 py-1"
+        >
+          Ibrahim Stouri
+        </button>
+        <p className="text-ivory/20 text-[11px] mt-0.5 tracking-widest uppercase">
           © {new Date().getFullYear()} · Rami Score Tracker
         </p>
       </div>
