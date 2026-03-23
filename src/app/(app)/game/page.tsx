@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import GameScreen from '@/screens/GameScreen'
-import WelcomeScreen from '@/screens/WelcomeScreen'
 import PodiumScreen from '@/components/PodiumScreen'
 import { useGameStore, type ActiveGame } from '@/store/gameStore'
 import { useHistoryStore } from '@/store/historyStore'
@@ -25,20 +24,24 @@ export default function GamePage() {
 
   const [view, setView] = useState<View>('welcome')
   const [finishedGame, setFinishedGame] = useState<ActiveGame | null>(null)
+  const [hasChecked, setHasChecked] = useState(false)
 
   useEffect(() => {
-    loadActiveGame()
+    loadActiveGame().then(() => setHasChecked(true))
   }, [loadActiveGame])
 
-  // Transition to game view only when activeGame loads while we're on welcome
+  // If no active game after initial check, send to dashboard
+  useEffect(() => {
+    if (hasChecked && !activeGame && view === 'welcome') {
+      router.replace('/dashboard')
+    }
+  }, [hasChecked, activeGame, view, router])
+
+  // Transition to game view when activeGame loads while on welcome
   useEffect(() => {
     if (activeGame && view === 'welcome') setView('game')
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeGame])
-
-  const handleStart = (matchName: string) => {
-    router.push(`/game/setup?match=${encodeURIComponent(matchName)}`)
-  }
 
   const handleEndGame = async () => {
     const finished = await endGame()
@@ -57,7 +60,7 @@ export default function GamePage() {
   const handleNewGame = () => {
     clearGame()
     setFinishedGame(null)
-    setView('welcome')
+    router.push('/dashboard')
   }
 
   if (isLoading) {
@@ -71,25 +74,6 @@ export default function GamePage() {
   return (
     <div className="relative overflow-hidden min-h-screen">
       <AnimatePresence mode="wait">
-        {view === 'welcome' && (
-          <motion.div
-            key="welcome"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={pageTransition}
-            className="absolute inset-0 overflow-y-auto"
-          >
-            <WelcomeScreen
-              onStart={handleStart}
-              onHistory={() => router.push('/dashboard')}
-              hasActiveGame={false}
-              onResume={() => setView('game')}
-            />
-          </motion.div>
-        )}
-
         {view === 'game' && activeGame && (
           <motion.div
             key="game"

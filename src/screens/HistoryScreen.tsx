@@ -11,6 +11,7 @@ import type { SavedMatch } from '../store/historyStore'
 interface Props {
   onBack: () => void
   onViewMatch: (match: SavedMatch) => void
+  hideBack?: boolean
 }
 
 function formatDate(iso: string) {
@@ -19,7 +20,7 @@ function formatDate(iso: string) {
   })
 }
 
-export default function HistoryScreen({ onBack, onViewMatch }: Props) {
+export default function HistoryScreen({ onBack, onViewMatch, hideBack = false }: Props) {
   const { matches, deleteMatch } = useHistoryStore()
   const [toDelete, setToDelete] = useState<string | null>(null)
 
@@ -31,9 +32,11 @@ export default function HistoryScreen({ onBack, onViewMatch }: Props) {
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
       >
-        <button onClick={onBack} className="btn-ghost p-2.5">
-          <ArrowLeft size={18} />
-        </button>
+        {!hideBack && (
+          <button onClick={onBack} className="btn-ghost p-2.5">
+            <ArrowLeft size={18} />
+          </button>
+        )}
         <div>
           <h1 className="font-display text-xl font-bold text-ivory">Parties sauvegardées</h1>
           <p className="text-ivory/40 text-xs">{matches.length} partie{matches.length > 1 ? 's' : ''}</p>
