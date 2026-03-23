@@ -10,14 +10,25 @@
       <stop offset="100%" stop-color="#E8C97A" stop-opacity="0.9"/>
     </linearGradient>
   </defs>
+
+  <!-- Card background -->
   <rect width="64" height="64" rx="13" fill="url(#bg)"/>
+  <!-- Gold border -->
   <rect x="2" y="2" width="60" height="60" rx="11" fill="none" stroke="url(#border)" stroke-width="2"/>
+
+  <!-- ♠ top-left -->
   <text x="16" y="30" font-family="Georgia,Times New Roman,serif" font-size="22"
-        text-anchor="middle" fill="#C9A84C">♠</text>
+        text-anchor="middle" dominant-baseline="auto" fill="#C9A84C">♠</text>
+
+  <!-- ♥ top-right -->
   <text x="48" y="30" font-family="Georgia,Times New Roman,serif" font-size="22"
-        text-anchor="middle" fill="#C0392B">♥</text>
+        text-anchor="middle" dominant-baseline="auto" fill="#C0392B">♥</text>
+
+  <!-- ♦ bottom-left -->
   <text x="16" y="56" font-family="Georgia,Times New Roman,serif" font-size="22"
-        text-anchor="middle" fill="#C0392B">♦</text>
+        text-anchor="middle" dominant-baseline="auto" fill="#C0392B">♦</text>
+
+  <!-- ♣ bottom-right -->
   <text x="48" y="56" font-family="Georgia,Times New Roman,serif" font-size="22"
-        text-anchor="middle" fill="#C9A84C">♣</text>
+        text-anchor="middle" dominant-baseline="auto" fill="#C9A84C">♣</text>
 </svg>

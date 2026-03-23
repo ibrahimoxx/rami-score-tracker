@@ -5,6 +5,12 @@ export const metadata: Metadata = {
   title: 'Rami Score Tracker',
   description: 'Suivi des scores pour le jeu de Rami',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/favicon.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
