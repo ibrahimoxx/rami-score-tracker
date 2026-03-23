@@ -34,11 +34,11 @@ function mapRound(r: Record<string, unknown>, scores: Record<string, unknown>[])
 
 // ─── Match CRUD ───────────────────────────────────────────────────────────────
 
-export async function createMatch(name: string, userId: string) {
+export async function createMatch(name: string, userId: string, penaltyRules: number[] = []) {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('matches')
-    .insert({ name, user_id: userId, status: 'active' })
+    .insert({ name, user_id: userId, status: 'active', penalty_rules: penaltyRules })
     .select()
     .single()
   if (error) throw error
@@ -153,6 +153,7 @@ export async function getActiveMatch(userId: string): Promise<ActiveGame | null>
     matchName: match.name as string,
     status: 'active',
     createdAt: match.created_at as string,
+    penaltyRules: (match.penalty_rules as number[]) ?? [],
     players: (players ?? []).map(p => mapPlayer(p as Record<string, unknown>)),
     rounds: (rounds ?? []).map(r =>
       mapRound(r as Record<string, unknown>, (scores ?? []) as Record<string, unknown>[])

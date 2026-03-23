@@ -7,6 +7,9 @@ import PlayerAvatar from './PlayerAvatar'
 import { useGameStore, type RoundScore } from '../store/gameStore'
 import { useToastStore } from '../store/toastStore'
 import { calcTotals } from '../utils/scores'
+import { PENALTY_COLORS } from '../utils/colors'
+
+type PenaltyItem = { value: number; ruleIdx: number }
 
 interface Props {
   onRoundAdded?: () => void
@@ -19,8 +22,7 @@ export default function RoundInputPanel({ onRoundAdded }: Props) {
   const { addToast } = useToastStore()
 
   const [scores, setScores] = useState<Record<string, number>>({})
-  // penalties stored as array of individual items per player so each can be removed
-  const [penaltyItems, setPenaltyItems] = useState<Record<string, number[]>>({})
+  const [penaltyItems, setPenaltyItems] = useState<Record<string, PenaltyItem[]>>({})
   const [winner, setWinner] = useState<string | null>(null)
   const [shakingPenalty, setShakingPenalty] = useState<string | null>(null)
   const submitBtnRef = useRef<HTMLButtonElement>(null)
@@ -34,9 +36,9 @@ export default function RoundInputPanel({ onRoundAdded }: Props) {
     setScores(s => ({ ...s, [playerId]: isNaN(value) ? 0 : value }))
   }
 
-  const addPenalty = (playerId: string, amount: number) => {
-    setPenaltyItems(p => ({ ...p, [playerId]: [...(p[playerId] ?? []), amount] }))
-    setShakingPenalty(`${playerId}-${amount}`)
+  const addPenalty = (playerId: string, value: number, ruleIdx: number) => {
+    setPenaltyItems(p => ({ ...p, [playerId]: [...(p[playerId] ?? []), { value, ruleIdx }] }))
+    setShakingPenalty(`${playerId}-${ruleIdx}`)
     setTimeout(() => setShakingPenalty(null), 400)
   }
 
@@ -57,7 +59,7 @@ export default function RoundInputPanel({ onRoundAdded }: Props) {
 
     const roundScores: RoundScore[] = players.map(p => {
       const items = penaltyItems[p.id] ?? []
-      const penTotal = items.reduce((a, b) => a + b, 0)
+      const penTotal = items.reduce((a, b) => a + b.value, 0)
       return {
         playerId: p.id,
         score: p.id === winner ? 0 : (scores[p.id] ?? 0),
@@ -121,7 +123,7 @@ export default function RoundInputPanel({ onRoundAdded }: Props) {
         {players.map(player => {
           const isWin = winner === player.id
           const items = penaltyItems[player.id] ?? []
-          const pen = items.reduce((a, b) => a + b, 0)
+          const pen = items.reduce((a, b) => a + b.value, 0)
           const baseScore = isWin ? 0 : (scores[player.id] ?? '')
           const displayTotal = isWin ? 0 : ((scores[player.id] ?? 0) + pen)
 
@@ -190,25 +192,23 @@ export default function RoundInputPanel({ onRoundAdded }: Props) {
                     className="rami-input text-center text-lg font-bold py-2 flex-1"
                   />
 
-                  {/* Penalty buttons */}
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => addPenalty(player.id, 11)}
-                    className={`text-xs font-bold px-3 py-2 rounded-lg bg-orange-600/80 text-white border border-orange-500/40 flex-shrink-0 ${
-                      shakingPenalty === `${player.id}-11` ? 'animate-shake' : ''
-                    }`}
-                  >
-                    +11
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => addPenalty(player.id, 51)}
-                    className={`text-xs font-bold px-3 py-2 rounded-lg bg-red-card/90 text-white border border-red-700/40 flex-shrink-0 ${
-                      shakingPenalty === `${player.id}-51` ? 'animate-shake' : ''
-                    }`}
-                  >
-                    +51
-                  </motion.button>
+                  {/* Penalty buttons — configured per match */}
+                  {(activeGame.penaltyRules ?? []).map((val, ruleIdx) => {
+                    const col = PENALTY_COLORS[ruleIdx % PENALTY_COLORS.length]
+                    return (
+                      <motion.button
+                        key={ruleIdx}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => addPenalty(player.id, val, ruleIdx)}
+                        className={`text-xs font-bold px-3 py-2 rounded-lg text-white flex-shrink-0 ${
+                          shakingPenalty === `${player.id}-${ruleIdx}` ? 'animate-shake' : ''
+                        }`}
+                        style={{ background: col.bg, border: `1px solid ${col.border}` }}
+                      >
+                        +{val}
+                      </motion.button>
+                    )
+                  })}
                 </div>
               )}
 
@@ -216,25 +216,25 @@ export default function RoundInputPanel({ onRoundAdded }: Props) {
               {!isWin && items.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   <AnimatePresence>
-                    {items.map((amt, idx) => (
-                      <motion.button
-                        key={idx}
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                        onClick={() => removePenalty(player.id, idx)}
-                        className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full text-white border"
-                        style={{
-                          background: amt === 51 ? 'rgba(192,57,43,0.7)' : 'rgba(234,88,12,0.7)',
-                          borderColor: amt === 51 ? 'rgba(185,28,28,0.5)' : 'rgba(234,88,12,0.5)',
-                        }}
-                        title="Appuyer pour annuler"
-                      >
-                        +{amt}
-                        <X size={10} strokeWidth={3} className="opacity-80" />
-                      </motion.button>
-                    ))}
+                    {items.map((item, idx) => {
+                      const col = PENALTY_COLORS[item.ruleIdx % PENALTY_COLORS.length]
+                      return (
+                        <motion.button
+                          key={idx}
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                          onClick={() => removePenalty(player.id, idx)}
+                          className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full text-white border"
+                          style={{ background: col.bg, borderColor: col.border }}
+                          title="Appuyer pour annuler"
+                        >
+                          +{item.value}
+                          <X size={10} strokeWidth={3} className="opacity-80" />
+                        </motion.button>
+                      )
+                    })}
                   </AnimatePresence>
                   <span className="self-center text-xs text-ivory/30 ml-1">
                     = <span className="text-red-400 font-semibold">+{pen}</span>

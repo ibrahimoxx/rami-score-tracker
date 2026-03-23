@@ -11,8 +11,8 @@ function SetupContent() {
   const matchName = searchParams.get('match') || 'Nouvelle partie'
   const { startGame, isLoading } = useGameStore()
 
-  const handleStart = async (players: { name: string; color: string; textColor: string; position: number }[]) => {
-    await startGame(matchName, players)
+  const handleStart = async (players: { name: string; color: string; textColor: string; position: number }[], penaltyRules: number[]) => {
+    await startGame(matchName, players, penaltyRules)
     router.push('/game')
   }
 

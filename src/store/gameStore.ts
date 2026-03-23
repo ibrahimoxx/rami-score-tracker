@@ -31,6 +31,7 @@ export interface ActiveGame {
   rounds: Round[]
   status: 'active' | 'finished'
   createdAt: string
+  penaltyRules: number[]
 }
 
 interface GameState {
@@ -38,7 +39,7 @@ interface GameState {
   isLoading: boolean
   syncError: string | null
   loadActiveGame: () => Promise<void>
-  startGame: (matchName: string, players: Omit<Player, 'id'>[]) => Promise<void>
+  startGame: (matchName: string, players: Omit<Player, 'id'>[], penaltyRules: number[]) => Promise<void>
   addRound: (scores: RoundScore[]) => Promise<void>
   editLastRound: (scores: RoundScore[]) => Promise<void>
   endGame: () => Promise<ActiveGame | null>
@@ -63,14 +64,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
-  startGame: async (matchName, playerDefs) => {
+  startGame: async (matchName, playerDefs, penaltyRules) => {
     set({ isLoading: true, syncError: null })
     try {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Non authentifié')
 
-      const match = await db.createMatch(matchName, user.id)
+      const match = await db.createMatch(matchName, user.id, penaltyRules)
       const players = await db.createPlayers(match.id, playerDefs.map((p, i) => ({ ...p, position: i })))
 
       set({
@@ -82,6 +83,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           rounds: [],
           status: 'active',
           createdAt: match.created_at,
+          penaltyRules: (match.penalty_rules as number[]) ?? [],
         },
       })
     } catch (e) {

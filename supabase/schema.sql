@@ -5,13 +5,17 @@
 
 -- 1. MATCHES
 CREATE TABLE IF NOT EXISTS matches (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  name        TEXT NOT NULL,
-  status      TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'finished')),
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  finished_at TIMESTAMPTZ
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name          TEXT NOT NULL,
+  status        TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'finished')),
+  penalty_rules JSONB NOT NULL DEFAULT '[]',
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  finished_at   TIMESTAMPTZ
 );
+
+-- Migration for existing databases (run once if table already exists):
+-- ALTER TABLE matches ADD COLUMN IF NOT EXISTS penalty_rules JSONB NOT NULL DEFAULT '[]';
 
 -- 2. PLAYERS
 CREATE TABLE IF NOT EXISTS players (

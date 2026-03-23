@@ -1,12 +1,12 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ArrowLeft, User } from 'lucide-react'
-import { getPlayerColor } from '../utils/colors'
+import { ArrowRight, ArrowLeft, User, X } from 'lucide-react'
+import { getPlayerColor, PENALTY_COLORS } from '../utils/colors'
 
 interface Props {
   onBack: () => void
-  onStart: (players: { name: string; color: string; textColor: string; position: number }[]) => void
+  onStart: (players: { name: string; color: string; textColor: string; position: number }[], penaltyRules: number[]) => void
 }
 
 const COUNTS = [2, 3, 4, 5, 6]
@@ -14,6 +14,20 @@ const COUNTS = [2, 3, 4, 5, 6]
 export default function PlayerSetupScreen({ onBack, onStart }: Props) {
   const [count, setCount] = useState(4)
   const [names, setNames] = useState<string[]>(Array(6).fill(''))
+  const [penaltyInput, setPenaltyInput] = useState('')
+  const [penaltyRules, setPenaltyRules] = useState<number[]>([])
+
+  const addPenaltyRule = () => {
+    const val = parseInt(penaltyInput)
+    if (!isNaN(val) && val > 0) {
+      setPenaltyRules(r => [...r, val])
+      setPenaltyInput('')
+    }
+  }
+
+  const removePenaltyRule = (idx: number) => {
+    setPenaltyRules(r => r.filter((_, i) => i !== idx))
+  }
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -35,7 +49,7 @@ export default function PlayerSetupScreen({ onBack, onStart }: Props) {
         position: i,
       }
     })
-    onStart(players)
+    onStart(players, penaltyRules)
   }
 
   return (
@@ -85,7 +99,7 @@ export default function PlayerSetupScreen({ onBack, onStart }: Props) {
         {/* Name inputs */}
         <motion.div
           className="glass-card p-5 overflow-y-auto"
-          style={{ maxHeight: '55vh' }}
+          style={{ maxHeight: '40vh' }}
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -136,6 +150,65 @@ export default function PlayerSetupScreen({ onBack, onStart }: Props) {
           </div>
         </motion.div>
 
+        {/* Penalty rules config */}
+        <motion.div
+          className="glass-card p-5 mt-4"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <h2 className="text-ivory/60 text-sm mb-3">
+            Pénalités <span className="text-ivory/30 text-xs">(optionnel)</span>
+          </h2>
+          <div className="flex gap-2 mb-3">
+            <input
+              type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Valeur (ex: 11)"
+              value={penaltyInput}
+              onChange={e => setPenaltyInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addPenaltyRule()}
+              className="rami-input py-2.5 flex-1 text-center"
+            />
+            <button
+              onClick={addPenaltyRule}
+              disabled={!penaltyInput.trim() || isNaN(parseInt(penaltyInput)) || parseInt(penaltyInput) <= 0}
+              className="btn-gold px-4 text-sm font-bold disabled:opacity-40"
+            >
+              + Ajouter
+            </button>
+          </div>
+          {penaltyRules.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              <AnimatePresence>
+                {penaltyRules.map((v, i) => {
+                  const col = PENALTY_COLORS[i % PENALTY_COLORS.length]
+                  return (
+                    <motion.button
+                      key={i}
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                      onClick={() => removePenaltyRule(i)}
+                      className="flex items-center gap-1.5 text-sm font-bold px-3 py-1.5 rounded-full text-white"
+                      style={{ background: col.bg, border: `1px solid ${col.border}` }}
+                      title="Appuyer pour supprimer"
+                    >
+                      +{v} <X size={11} strokeWidth={3} className="opacity-80" />
+                    </motion.button>
+                  )
+                })}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <p className="text-ivory/25 text-xs text-center py-1">
+              Aucune pénalité — la partie n&apos;aura pas de boutons de pénalité
+            </p>
+          )}
+        </motion.div>
+
         {/* Start button */}
         <motion.button
           whileTap={{ scale: 0.97 }}
@@ -151,3 +224,4 @@ export default function PlayerSetupScreen({ onBack, onStart }: Props) {
     </div>
   )
 }
+
