@@ -1,3 +1,4 @@
+'use client'
 import { useMemo, useRef, useEffect } from 'react'
 import { Crown } from 'lucide-react'
 import PlayerAvatar from './PlayerAvatar'
@@ -6,9 +7,8 @@ import { calcTotals, sortByScore, getWinCounts, getRoundDelta } from '../utils/s
 
 export default function ScoreBoard() {
   const { activeGame } = useGameStore()
-  if (!activeGame) return null
-
-  const { players, rounds } = activeGame
+  const players = activeGame?.players ?? []
+  const rounds = activeGame?.rounds ?? []
   const totals = useMemo(() => calcTotals(players, rounds), [players, rounds])
   const sorted = useMemo(() => sortByScore(players, totals), [players, totals])
   const wins = useMemo(() => getWinCounts(players, rounds), [players, rounds])
@@ -17,6 +17,8 @@ export default function ScoreBoard() {
   useEffect(() => {
     prevTotalsRef.current = totals
   })
+
+  if (!activeGame) return null
 
   return (
     <div className="glass-card p-3">

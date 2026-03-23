@@ -1,3 +1,4 @@
+'use client'
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Trophy, ChevronDown, ChevronUp } from 'lucide-react'

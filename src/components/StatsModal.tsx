@@ -1,3 +1,4 @@
+'use client'
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Crown, Zap, TrendingUp, Award } from 'lucide-react'

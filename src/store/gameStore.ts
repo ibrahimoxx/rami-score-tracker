@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createClient } from '@/lib/supabase/client'
+import * as db from '@/lib/db'
 
 export interface RoundScore {
   playerId: string
@@ -34,71 +35,108 @@ export interface ActiveGame {
 
 interface GameState {
   activeGame: ActiveGame | null
-  startGame: (matchName: string, players: Omit<Player, 'id'>[]) => void
-  addRound: (scores: RoundScore[]) => void
-  editLastRound: (scores: RoundScore[]) => void
-  endGame: () => ActiveGame | null
+  isLoading: boolean
+  syncError: string | null
+  loadActiveGame: () => Promise<void>
+  startGame: (matchName: string, players: Omit<Player, 'id'>[]) => Promise<void>
+  addRound: (scores: RoundScore[]) => Promise<void>
+  editLastRound: (scores: RoundScore[]) => Promise<void>
+  endGame: () => Promise<ActiveGame | null>
   clearGame: () => void
 }
 
-function uid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36)
-}
+export const useGameStore = create<GameState>((set, get) => ({
+  activeGame: null,
+  isLoading: false,
+  syncError: null,
 
-export const useGameStore = create<GameState>()(
-  persist(
-    (set, get) => ({
-      activeGame: null,
+  loadActiveGame: async () => {
+    set({ isLoading: true, syncError: null })
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { set({ isLoading: false }); return }
+      const game = await db.getActiveMatch(user.id)
+      set({ activeGame: game, isLoading: false })
+    } catch (e) {
+      set({ isLoading: false, syncError: (e as Error).message })
+    }
+  },
 
-      startGame: (matchName, playerDefs) => {
-        const players: Player[] = playerDefs.map((p, i) => ({
-          ...p,
-          id: uid(),
-          position: i,
-        }))
-        set({
-          activeGame: {
-            id: uid(),
-            matchName,
-            players,
-            rounds: [],
-            status: 'active',
-            createdAt: new Date().toISOString(),
-          },
-        })
-      },
+  startGame: async (matchName, playerDefs) => {
+    set({ isLoading: true, syncError: null })
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Non authentifié')
 
-      addRound: (scores) => {
-        const game = get().activeGame
-        if (!game) return
-        const round: Round = {
-          id: uid(),
-          roundNumber: game.rounds.length + 1,
-          scores,
-          createdAt: new Date().toISOString(),
-        }
-        set({ activeGame: { ...game, rounds: [...game.rounds, round] } })
-      },
+      const match = await db.createMatch(matchName, user.id)
+      const players = await db.createPlayers(match.id, playerDefs.map((p, i) => ({ ...p, position: i })))
 
-      editLastRound: (scores) => {
-        const game = get().activeGame
-        if (!game || game.rounds.length === 0) return
-        const rounds = [...game.rounds]
-        const last = rounds[rounds.length - 1]
-        rounds[rounds.length - 1] = { ...last, scores }
-        set({ activeGame: { ...game, rounds } })
-      },
+      set({
+        isLoading: false,
+        activeGame: {
+          id: match.id,
+          matchName: match.name,
+          players,
+          rounds: [],
+          status: 'active',
+          createdAt: match.created_at,
+        },
+      })
+    } catch (e) {
+      set({ isLoading: false, syncError: (e as Error).message })
+    }
+  },
 
-      endGame: () => {
-        const game = get().activeGame
-        if (!game) return null
-        const finished = { ...game, status: 'finished' as const, finishedAt: new Date().toISOString() }
-        set({ activeGame: null })
-        return finished
-      },
+  addRound: async (scores) => {
+    const game = get().activeGame
+    if (!game) return
+    try {
+      const roundNumber = game.rounds.length + 1
+      const roundRow = await db.createRound(game.id, roundNumber)
+      const roundId = roundRow.id as string
+      await db.saveRoundScores(roundId, scores)
 
-      clearGame: () => set({ activeGame: null }),
-    }),
-    { name: 'rami-active-game' }
-  )
-)
+      const round: Round = {
+        id: roundId,
+        roundNumber,
+        scores,
+        createdAt: roundRow.created_at as string,
+      }
+      set({ activeGame: { ...game, rounds: [...game.rounds, round] } })
+    } catch (e) {
+      set({ syncError: (e as Error).message })
+    }
+  },
+
+  editLastRound: async (scores) => {
+    const game = get().activeGame
+    if (!game || game.rounds.length === 0) return
+    try {
+      const rounds = [...game.rounds]
+      const last = rounds[rounds.length - 1]
+      await db.updateRoundScores(last.id, scores)
+      rounds[rounds.length - 1] = { ...last, scores }
+      set({ activeGame: { ...game, rounds } })
+    } catch (e) {
+      set({ syncError: (e as Error).message })
+    }
+  },
+
+  endGame: async () => {
+    const game = get().activeGame
+    if (!game) return null
+    try {
+      await db.finishMatch(game.id)
+      const finished: ActiveGame = { ...game, status: 'finished' }
+      set({ activeGame: null })
+      return finished
+    } catch (e) {
+      set({ syncError: (e as Error).message })
+      return null
+    }
+  },
+
+  clearGame: () => set({ activeGame: null }),
+}))

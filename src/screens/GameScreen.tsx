@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { BarChart2, Clock, LogOut } from 'lucide-react'

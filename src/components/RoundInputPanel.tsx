@@ -1,3 +1,4 @@
+'use client'
 import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Trophy, CheckCircle, X } from 'lucide-react'
@@ -24,10 +25,9 @@ export default function RoundInputPanel({ onRoundAdded }: Props) {
   const [shakingPenalty, setShakingPenalty] = useState<string | null>(null)
   const submitBtnRef = useRef<HTMLButtonElement>(null)
 
-  if (!activeGame) return null
-  const { players, rounds } = activeGame
+  const players = activeGame?.players ?? []
+  const rounds = activeGame?.rounds ?? []
   const currentRound = rounds.length + 1
-
   const currentTotals = calcTotals(players, rounds)
 
   const setScore = (playerId: string, value: number) => {
@@ -101,6 +101,8 @@ export default function RoundInputPanel({ onRoundAdded }: Props) {
     setWinner(null)
     onRoundAdded?.()
   }, [activeGame, players, scores, penaltyItems, winner, currentTotals, addRound, addToast, onRoundAdded])
+
+  if (!activeGame) return null
 
   return (
     <div className="glass-card p-4">

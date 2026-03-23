@@ -1,3 +1,4 @@
+'use client'
 import { getInitials } from '../utils/colors'
 
 interface Props {

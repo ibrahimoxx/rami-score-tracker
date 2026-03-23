@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Edit2, Trophy, ChevronDown, ChevronUp } from 'lucide-react'
@@ -11,17 +12,18 @@ interface EditModalProps {
 
 function EditRoundModal({ roundIndex, onClose }: EditModalProps) {
   const { activeGame, editLastRound } = useGameStore()
-  if (!activeGame) return null
-
-  const round = activeGame.rounds[roundIndex]
+  const round = activeGame?.rounds[roundIndex]
   const [scores, setScores] = useState<Record<string, number>>(
-    Object.fromEntries(round.scores.map(s => [s.playerId, s.score]))
-  )
-  const penalties: Record<string, number> = Object.fromEntries(
-    round.scores.map(s => [s.playerId, s.penalties])
+    () => Object.fromEntries(round?.scores.map(s => [s.playerId, s.score]) ?? [])
   )
   const [winner, setWinner] = useState<string | null>(
-    round.scores.find(s => s.isWinner)?.playerId ?? null
+    () => round?.scores.find(s => s.isWinner)?.playerId ?? null
+  )
+
+  if (!activeGame || !round) return null
+
+  const penalties: Record<string, number> = Object.fromEntries(
+    round.scores.map(s => [s.playerId, s.penalties])
   )
 
   const handleSave = () => {

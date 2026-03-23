@@ -1,3 +1,4 @@
+'use client'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ArrowLeft, User } from 'lucide-react'
@@ -14,13 +15,14 @@ export default function PlayerSetupScreen({ onBack, onStart }: Props) {
   const [count, setCount] = useState(4)
   const [names, setNames] = useState<string[]>(Array(6).fill(''))
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    // When count changes, ensure array is right length
     setNames(prev => {
       const next = [...prev]
       while (next.length < 6) next.push('')
       return next
     })
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [count])
 
   const handleStart = () => {

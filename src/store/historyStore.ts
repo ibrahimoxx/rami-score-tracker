@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { ActiveGame } from './gameStore'
+import * as db from '@/lib/db'
 
 export interface SavedMatch extends ActiveGame {
   finishedAt?: string
@@ -8,24 +8,35 @@ export interface SavedMatch extends ActiveGame {
 
 interface HistoryState {
   matches: SavedMatch[]
-  saveMatch: (match: SavedMatch) => void
-  deleteMatch: (id: string) => void
+  isLoading: boolean
+  loadMatches: () => Promise<void>
+  deleteMatch: (id: string) => Promise<void>
 }
 
-export const useHistoryStore = create<HistoryState>()(
-  persist(
-    (set) => ({
-      matches: [],
-      saveMatch: (match) =>
-        set((s) => ({
-          matches: [
-            { ...match, finishedAt: match.finishedAt ?? new Date().toISOString() },
-            ...s.matches.filter(m => m.id !== match.id),
-          ],
-        })),
-      deleteMatch: (id) =>
-        set((s) => ({ matches: s.matches.filter(m => m.id !== id) })),
-    }),
-    { name: 'rami-history' }
-  )
-)
+export const useHistoryStore = create<HistoryState>((set) => ({
+  matches: [],
+  isLoading: false,
+
+  loadMatches: async () => {
+    set({ isLoading: true })
+    try {
+      const { createClient } = await import('@/lib/supabase/client')
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { set({ isLoading: false }); return }
+      const matches = await db.getUserMatches(user.id)
+      set({ matches, isLoading: false })
+    } catch {
+      set({ isLoading: false })
+    }
+  },
+
+  deleteMatch: async (id) => {
+    try {
+      await db.deleteMatch(id)
+      set(s => ({ matches: s.matches.filter(m => m.id !== id) }))
+    } catch (e) {
+      console.error('Delete failed:', e)
+    }
+  },
+}))

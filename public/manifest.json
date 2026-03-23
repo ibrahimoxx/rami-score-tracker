@@ -1,0 +1,13 @@
+{
+  "name": "Rami Score Tracker",
+  "short_name": "Rami",
+  "description": "Suivi des scores pour le jeu de Rami",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0E1A",
+  "theme_color": "#0A0E1A",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

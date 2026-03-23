@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Trash2, Trophy, Calendar, Users } from 'lucide-react'
