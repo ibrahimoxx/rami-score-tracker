@@ -407,16 +407,18 @@ export default function LoginPage() {
 
       {/* Footer attribution */}
       <div className="relative z-10 text-center pb-2">
-        <p className="text-ivory/15 text-xs tracking-wide">
+        <p className="text-ivory/30 text-xs tracking-wide">
           Conçu &amp; développé par{' '}
           <a
-            href="mailto:ibrahimistouri@gmail.com"
-            className="text-gold/40 hover:text-gold/70 transition-colors font-medium"
+            href="https://www.ibrahimstouri.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold/70 hover:text-gold transition-colors font-semibold underline decoration-gold/30 underline-offset-2"
           >
             Ibrahim Stouri
           </a>
         </p>
-        <p className="text-ivory/10 text-[10px] mt-0.5 tracking-widest uppercase">
+        <p className="text-ivory/20 text-[11px] mt-1 tracking-widest uppercase">
           © {new Date().getFullYear()} · Rami Score Tracker
         </p>
       </div>

@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, LayoutDashboard } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import FloatingCardBackground from '../components/FloatingCardBackground'
 
 interface Props {
@@ -30,13 +30,53 @@ export default function WelcomeScreen({ onStart, onHistory, hasActiveGame, onRes
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <button
+        <motion.button
           onClick={onHistory}
-          className="btn-ghost flex items-center gap-2 px-4 py-2 text-sm"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          className="relative overflow-hidden flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold"
+          style={{
+            background: 'linear-gradient(135deg, rgba(201,168,76,0.14), rgba(201,168,76,0.06))',
+            border: '1px solid rgba(201,168,76,0.35)',
+            color: '#C9A84C',
+            boxShadow: '0 0 18px rgba(201,168,76,0.1)',
+          }}
         >
-          <LayoutDashboard size={15} />
-          Tableau de bord
-        </button>
+          {/* Shimmer sweep */}
+          <motion.span
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(201,168,76,0.18) 50%, transparent 100%)' }}
+            animate={{ x: ['-110%', '210%'] }}
+            transition={{ repeat: Infinity, duration: 2.4, ease: 'linear', repeatDelay: 2.6 }}
+          />
+          {/* Left suits */}
+          <span className="relative text-[13px] leading-none">
+            <motion.span
+              style={{ display: 'inline-block' }}
+              animate={{ rotate: [0, 12, -12, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut' }}
+            >♠</motion.span>
+            <motion.span
+              style={{ display: 'inline-block', color: '#C0392B', marginLeft: 2 }}
+              animate={{ rotate: [0, -12, 12, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut', delay: 2 }}
+            >♥</motion.span>
+          </span>
+          <span className="relative tracking-wide">Tableau de bord</span>
+          {/* Right suits */}
+          <span className="relative text-[13px] leading-none">
+            <motion.span
+              style={{ display: 'inline-block', color: '#C0392B' }}
+              animate={{ rotate: [0, 12, -12, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut', delay: 1 }}
+            >♦</motion.span>
+            <motion.span
+              style={{ display: 'inline-block', marginLeft: 2 }}
+              animate={{ rotate: [0, -12, 12, 0] }}
+              transition={{ repeat: Infinity, duration: 4, ease: 'easeInOut', delay: 3 }}
+            >♣</motion.span>
+          </span>
+        </motion.button>
       </motion.div>
 
       {/* Main content */}

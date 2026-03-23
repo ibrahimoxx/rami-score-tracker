@@ -7,11 +7,12 @@ import { getPlayerColor, PENALTY_COLORS } from '../utils/colors'
 interface Props {
   onBack: () => void
   onStart: (players: { name: string; color: string; textColor: string; position: number }[], penaltyRules: number[]) => void
+  isLoading?: boolean
 }
 
 const COUNTS = [2, 3, 4, 5, 6]
 
-export default function PlayerSetupScreen({ onBack, onStart }: Props) {
+export default function PlayerSetupScreen({ onBack, onStart, isLoading = false }: Props) {
   const [count, setCount] = useState(4)
   const [names, setNames] = useState<string[]>(Array(6).fill(''))
   const [penaltyInput, setPenaltyInput] = useState('')
@@ -211,14 +212,22 @@ export default function PlayerSetupScreen({ onBack, onStart }: Props) {
 
         {/* Start button */}
         <motion.button
-          whileTap={{ scale: 0.97 }}
+          whileTap={{ scale: isLoading ? 1 : 0.97 }}
           onClick={handleStart}
-          className="btn-gold w-full py-4 text-base font-bold flex items-center justify-center gap-2 mt-4"
+          disabled={isLoading}
+          className="btn-gold w-full py-4 text-base font-bold flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          Lancer la partie <ArrowRight size={18} />
+          {isLoading ? (
+            <>
+              <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+              Création de la partie…
+            </>
+          ) : (
+            <>Lancer la partie <ArrowRight size={18} /></>
+          )}
         </motion.button>
       </div>
     </div>
