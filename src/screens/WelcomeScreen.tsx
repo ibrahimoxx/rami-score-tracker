@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowRight, History } from 'lucide-react'
+import { ArrowRight, LayoutDashboard } from 'lucide-react'
 import FloatingCardBackground from '../components/FloatingCardBackground'
 
 interface Props {
@@ -20,8 +20,24 @@ export default function WelcomeScreen({ onStart, onHistory, hasActiveGame, onRes
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between p-6 pt-0 relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-between p-6 pt-4 relative overflow-hidden">
       <FloatingCardBackground />
+
+      {/* Top bar — dashboard link */}
+      <motion.div
+        className="w-full flex justify-end relative z-10"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
+        <button
+          onClick={onHistory}
+          className="btn-ghost flex items-center gap-2 px-4 py-2 text-sm"
+        >
+          <LayoutDashboard size={15} />
+          Tableau de bord
+        </button>
+      </motion.div>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm relative z-10">
@@ -109,20 +125,7 @@ export default function WelcomeScreen({ onStart, onHistory, hasActiveGame, onRes
         </motion.div>
       </div>
 
-      {/* Bottom: history link */}
-      <motion.div
-        className="relative z-10 pb-safe"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
-      >
-        <button
-          onClick={onHistory}
-          className="btn-ghost flex items-center gap-2 px-5 py-2.5 text-sm"
-        >
-          <History size={16} /> Parties précédentes
-        </button>
-      </motion.div>
+      <div />
     </div>
   )
 }

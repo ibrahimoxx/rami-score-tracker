@@ -20,8 +20,21 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [magicSent, setMagicSent] = useState(false)
+  const [forgotMode, setForgotMode] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
 
   const clearError = () => setError('')
+
+  const toFrench = (msg: string): string => {
+    const m = msg.toLowerCase()
+    if (m.includes('invalid login') || m.includes('invalid credentials') || m.includes('wrong password') || m.includes('email not confirmed')) return 'Email ou mot de passe incorrect.'
+    if (m.includes('user already registered') || m.includes('already been registered')) return 'Un compte existe déjà avec cet email.'
+    if (m.includes('password should be') || m.includes('password must be')) return 'Le mot de passe doit contenir au moins 6 caractères.'
+    if (m.includes('unable to validate') || m.includes('invalid email')) return 'Adresse email invalide.'
+    if (m.includes('email rate limit') || m.includes('too many requests')) return 'Trop de tentatives. Réessayez dans quelques minutes.'
+    if (m.includes('network') || m.includes('fetch')) return 'Erreur réseau. Vérifiez votre connexion.'
+    return 'Une erreur est survenue. Réessayez.'
+  }
 
   const handlePasswordAuth = async () => {
     setLoading(true)
@@ -29,14 +42,14 @@ export default function LoginPage() {
     const supabase = createClient()
     if (tab === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) { setError(error.message); setLoading(false); return }
+      if (error) { setError(toFrench(error.message)); setLoading(false); return }
     } else {
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: name } },
       })
-      if (error) { setError(error.message); setLoading(false); return }
+      if (error) { setError(toFrench(error.message)); setLoading(false); return }
     }
     router.push('/dashboard')
     router.refresh()
@@ -50,7 +63,7 @@ export default function LoginPage() {
       email,
       options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     })
-    if (error) { setError(error.message); setLoading(false); return }
+    if (error) { setError(toFrench(error.message)); setLoading(false); return }
     setMagicSent(true)
     setLoading(false)
   }
@@ -62,7 +75,105 @@ export default function LoginPage() {
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     })
-    if (error) setError(error.message)
+    if (error) setError(toFrench(error.message))
+  }
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) { setError('Saisissez votre adresse email.'); return }
+    setLoading(true)
+    clearError()
+    const supabase = createClient()
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset-password`,
+    })
+    setLoading(false)
+    if (error) { setError(toFrench(error.message)); return }
+    setResetSent(true)
+  }
+
+  if (forgotMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+        <FloatingCardBackground />
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="glass-card p-6 max-w-sm w-full relative z-10"
+        >
+          {resetSent ? (
+            <div className="text-center py-2">
+              <div className="text-5xl mb-4">📬</div>
+              <h2 className="font-display text-xl text-ivory font-bold mb-2">Lien envoyé !</h2>
+              <p className="text-ivory/50 text-sm mb-6">
+                Un lien de réinitialisation a été envoyé à{' '}
+                <strong className="text-ivory/80">{email}</strong>
+              </p>
+              <button
+                onClick={() => { setForgotMode(false); setResetSent(false) }}
+                className="btn-ghost text-sm px-4 py-2"
+              >
+                ← Retour à la connexion
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-5">
+                <h2 className="font-display text-xl text-ivory font-bold mb-1">Mot de passe oublié</h2>
+                <p className="text-ivory/40 text-sm">
+                  Entrez votre email pour recevoir un lien de réinitialisation.
+                </p>
+              </div>
+
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 text-red-400 text-sm mb-3"
+                  >
+                    {error}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="relative mb-3">
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ivory/30" />
+                <input
+                  type="email"
+                  placeholder="Votre adresse email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleForgotPassword()}
+                  className="rami-input pl-9"
+                  autoComplete="email"
+                  autoFocus
+                />
+              </div>
+
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleForgotPassword}
+                disabled={loading}
+                className="btn-gold w-full py-3 text-sm font-bold flex items-center justify-center gap-2 mb-3 disabled:opacity-60"
+              >
+                {loading
+                  ? <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  : <><ArrowRight size={16} /> Envoyer le lien</>
+                }
+              </motion.button>
+
+              <button
+                onClick={() => { setForgotMode(false); clearError() }}
+                className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors w-full text-center"
+              >
+                ← Retour à la connexion
+              </button>
+            </>
+          )}
+        </motion.div>
+      </div>
+    )
   }
 
   if (magicSent) {
@@ -283,10 +394,10 @@ export default function LoginPage() {
             {/* Forgot password */}
             {tab === 'login' && authMethod === 'password' && (
               <button
-                onClick={() => { setAuthMethod('magic'); clearError() }}
+                onClick={() => { setForgotMode(true); clearError() }}
                 className="text-xs text-ivory/30 hover:text-ivory/60 transition-colors w-full text-center"
               >
-                Mot de passe oublié ? → Utiliser un lien magique
+                Mot de passe oublié ?
               </button>
             )}
           </div>

@@ -84,7 +84,8 @@ export default function PlayerSetupScreen({ onBack, onStart }: Props) {
 
         {/* Name inputs */}
         <motion.div
-          className="glass-card p-5 flex-1"
+          className="glass-card p-5 overflow-y-auto"
+          style={{ maxHeight: '55vh' }}
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
