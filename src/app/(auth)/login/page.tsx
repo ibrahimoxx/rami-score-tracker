@@ -17,6 +17,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [magicSent, setMagicSent] = useState(false)
@@ -30,12 +32,15 @@ export default function LoginPage() {
     { test: (p: string) => /[0-9]/.test(p),    label: 'Au moins un chiffre' },
   ]
   const pwdStrong = PWD_RULES.every(r => r.test(password))
+  const pwdMatch  = tab !== 'register' || confirmPassword === '' || password === confirmPassword
 
   const clearError = () => setError('')
+  const switchTab = (t: Tab) => { setTab(t); clearError(); setConfirmPassword('') }
 
   const toFrench = (msg: string): string => {
     const m = msg.toLowerCase()
-    if (m.includes('invalid login') || m.includes('invalid credentials') || m.includes('wrong password') || m.includes('email not confirmed')) return 'Email ou mot de passe incorrect.'
+    if (m.includes('email not confirmed')) return 'Veuillez confirmer votre email avant de vous connecter.'
+    if (m.includes('invalid login') || m.includes('invalid credentials') || m.includes('wrong password')) return 'Email ou mot de passe incorrect.'
     if (m.includes('user already registered') || m.includes('already been registered')) return 'Un compte existe déjà avec cet email.'
     if (m.includes('password should be') || m.includes('password must be')) return 'Le mot de passe doit contenir au moins 6 caractères.'
     if (m.includes('unable to validate') || m.includes('invalid email')) return 'Adresse email invalide.'
@@ -55,7 +60,10 @@ export default function LoginPage() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: name } },
+        options: {
+          data: { full_name: name },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
       if (error) { setError(toFrench(error.message)); setLoading(false); return }
 
@@ -289,7 +297,7 @@ export default function LoginPage() {
             {(['login', 'register'] as Tab[]).map(t => (
               <button
                 key={t}
-                onClick={() => { setTab(t); clearError() }}
+                onClick={() => switchTab(t)}
                 className={`flex-1 py-3.5 text-sm font-medium transition-colors ${
                   tab === t ? 'text-gold border-b-2 border-gold' : 'text-ivory/40 hover:text-ivory/60'
                 }`}
@@ -421,6 +429,47 @@ export default function LoginPage() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+
+                  {/* Confirm password (register only) */}
+                  <AnimatePresence>
+                    {tab === 'register' && pwdStrong && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="mt-3"
+                      >
+                        <div className="relative">
+                          <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ivory/30" />
+                          <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            placeholder="Confirmer le mot de passe"
+                            value={confirmPassword}
+                            onChange={e => setConfirmPassword(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && handlePasswordAuth()}
+                            className={`rami-input pl-9 pr-10 ${
+                              confirmPassword.length > 0 && !pwdMatch
+                                ? 'border-red-500/60 focus:border-red-500'
+                                : confirmPassword.length > 0 && pwdMatch
+                                ? 'border-green-500/50'
+                                : ''
+                            }`}
+                            autoComplete="new-password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(s => !s)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-ivory/30 hover:text-ivory/60 transition-colors"
+                          >
+                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                        {confirmPassword.length > 0 && !pwdMatch && (
+                          <p className="text-red-400 text-xs mt-1.5 px-1">Les mots de passe ne correspondent pas.</p>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -429,7 +478,7 @@ export default function LoginPage() {
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={tab === 'login' && authMethod === 'magic' ? handleMagicLink : handlePasswordAuth}
-              disabled={loading || (tab === 'register' && !pwdStrong)}
+              disabled={loading || (tab === 'register' && (!pwdStrong || !pwdMatch || confirmPassword === ''))}
               className="btn-gold w-full py-3.5 text-base font-bold flex items-center justify-center gap-2 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
