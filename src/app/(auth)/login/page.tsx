@@ -201,6 +201,7 @@ export default function LoginPage() {
       <FloatingCardBackground />
 
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm relative z-10">
+
         {/* Logo */}
         <motion.div
           className="text-center mb-8"
@@ -402,6 +403,22 @@ export default function LoginPage() {
             )}
           </div>
         </motion.div>
+      </div>
+
+      {/* Footer attribution */}
+      <div className="relative z-10 text-center pb-2">
+        <p className="text-ivory/15 text-xs tracking-wide">
+          Conçu &amp; développé par{' '}
+          <a
+            href="mailto:ibrahimistouri@gmail.com"
+            className="text-gold/40 hover:text-gold/70 transition-colors font-medium"
+          >
+            Ibrahim Stouri
+          </a>
+        </p>
+        <p className="text-ivory/10 text-[10px] mt-0.5 tracking-widest uppercase">
+          © {new Date().getFullYear()} · Rami Score Tracker
+        </p>
       </div>
     </div>
   )

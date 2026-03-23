@@ -95,6 +95,12 @@ export default function AppHeader() {
                 Déconnexion
               </button>
 
+              <div className="mt-2 pt-2 border-t border-white/5 px-2">
+                <p className="text-ivory/20 text-xs">Créé par</p>
+                <p className="text-gold/60 text-xs font-medium">Ibrahim Stouri</p>
+                <p className="text-ivory/20 text-[10px] truncate">ibrahimistouri@gmail.com</p>
+              </div>
+
               <button
                 onClick={() => setDropdownOpen(false)}
                 className="absolute top-2.5 right-2.5 text-ivory/30 hover:text-ivory/60 transition-colors"

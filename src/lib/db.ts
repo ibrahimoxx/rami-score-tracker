@@ -202,6 +202,7 @@ export async function getUserMatches(userId: string): Promise<SavedMatch[]> {
       status: 'finished' as const,
       createdAt: m.created_at as string,
       finishedAt: m.finished_at as string,
+      penaltyRules: (m.penalty_rules as number[]) ?? [],
       players: matchPlayers,
       rounds: matchRounds,
     }
@@ -237,6 +238,7 @@ export async function getMatchDetail(matchId: string): Promise<SavedMatch | null
     status: match.status as 'finished',
     createdAt: match.created_at as string,
     finishedAt: match.finished_at as string,
+    penaltyRules: (match.penalty_rules as number[]) ?? [],
     players: (players ?? []).map(p => mapPlayer(p as Record<string, unknown>)),
     rounds: (rounds ?? []).map(r =>
       mapRound(r as Record<string, unknown>, (scores ?? []) as Record<string, unknown>[])
