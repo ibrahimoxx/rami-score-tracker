@@ -12,13 +12,6 @@ export function calcTotals(players: Player[], rounds: Round[]): Record<string, n
   return totals
 }
 
-export function calcRoundTotals(round: Round): Record<string, number> {
-  const totals: Record<string, number> = {}
-  round.scores.forEach(s => {
-    totals[s.playerId] = s.score + s.penalties
-  })
-  return totals
-}
 
 export function sortByScore(players: Player[], totals: Record<string, number>): Player[] {
   return [...players].sort((a, b) => (totals[a.id] ?? 0) - (totals[b.id] ?? 0))
