@@ -17,6 +17,7 @@ next-env.d.ts
 
 # Claude AI config — never commit
 .claude/
+CLAUDE.md
 
 # Sensitive / secrets — NEVER commit these
 .env
