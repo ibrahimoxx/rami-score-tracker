@@ -63,7 +63,7 @@ export default function GamePage() {
     router.push('/dashboard')
   }
 
-  if (isLoading) {
+  if (isLoading || view === 'welcome') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />

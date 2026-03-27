@@ -11,11 +11,12 @@ function SetupContent() {
   const { startGame, isLoading, syncError } = useGameStore()
 
   const handleStart = async (players: { name: string; color: string; textColor: string; position: number }[], penaltyRules: number[]) => {
-    await startGame(matchName, players, penaltyRules)
-    if (useGameStore.getState().activeGame) {
+    try {
+      await startGame(matchName, players, penaltyRules)
       router.push('/game')
+    } catch {
+      // syncError is set by the store — shown in the error banner below
     }
-    // If activeGame is still null, syncError is set — shown below
   }
 
   return (

@@ -88,6 +88,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       })
     } catch (e) {
       set({ isLoading: false, syncError: (e as Error).message })
+      throw e
     }
   },
 
