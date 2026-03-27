@@ -168,8 +168,8 @@ export default function RoundHistoryDrawer({ open, onClose }: Props) {
                       key={round.id}
                       className={`glass-card overflow-hidden ${isLast ? 'border-amber-500/20' : ''}`}
                     >
-                      <button
-                        className="w-full flex items-center justify-between p-3 text-left"
+                      <div
+                        className="w-full flex items-center justify-between p-3 text-left cursor-pointer"
                         onClick={() => setExpandedRound(isExpanded ? null : roundIdx)}
                       >
                         <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ export default function RoundHistoryDrawer({ open, onClose }: Props) {
                           )}
                           {isExpanded ? <ChevronUp size={14} className="text-ivory/40" /> : <ChevronDown size={14} className="text-ivory/40" />}
                         </div>
-                      </button>
+                      </div>
 
                       <AnimatePresence>
                         {isExpanded && (

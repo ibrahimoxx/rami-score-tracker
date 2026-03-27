@@ -27,6 +27,12 @@ export default function GamePage() {
   const [hasChecked, setHasChecked] = useState(false)
 
   useEffect(() => {
+    // If activeGame is already in store (came from startGame), skip the DB fetch
+    // to avoid a race condition where loadActiveGame returns null and clears activeGame
+    if (useGameStore.getState().activeGame) {
+      setHasChecked(true)
+      return
+    }
     loadActiveGame().then(() => setHasChecked(true))
   }, [loadActiveGame])
 
