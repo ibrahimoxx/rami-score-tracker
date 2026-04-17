@@ -19,6 +19,13 @@ tsconfig.tsbuildinfo
 # Claude AI config — never commit
 .claude/
 CLAUDE.md
+tasks/
+tasks/todo.md
+tasks/lessons.md
+skills/
+.cursorrules
+.aider*
+*.ai.md
 
 # Sensitive / secrets — NEVER commit these
 .env
@@ -39,8 +46,10 @@ service-account*.json
 
 # Editor directories and files
 .vscode/
+.vscode/settings.json
 .idea
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
