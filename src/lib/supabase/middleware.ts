@@ -25,12 +25,14 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // Refresh session — do NOT remove this line
-  const { data: { user } } = await supabase.auth.getUser()
+  // Refresh session from cookie — getSession() reads the JWT locally (no network call).
+  // This avoids the MIDDLEWARE_INVOCATION_TIMEOUT on Vercel Edge Runtime.
+  // For pages that need verified identity, use createClient().auth.getUser() in Server Components.
+  const { data: { session } } = await supabase.auth.getSession()
 
   // Redirect unauthenticated users away from protected routes
   if (
-    !user &&
+    !session &&
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/auth')
   ) {
@@ -40,7 +42,7 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirect logged-in users away from auth pages
-  if (user && request.nextUrl.pathname.startsWith('/login')) {
+  if (session && request.nextUrl.pathname.startsWith('/login')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
